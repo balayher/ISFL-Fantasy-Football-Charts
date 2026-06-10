@@ -5,7 +5,6 @@ library(ggtext)
 
 mainDir <- 'D:\\RStudio\\isfl\\' # file folder location
 plotDir <- paste0(mainDir, 'Charts\\') # name of output folder
-
 fanFile <- paste0(mainDir, 'S61 Fantasy Breakdowns - Export W4.csv') # name of data csv
 
 if (!file.exists(fanFile)) { 
@@ -24,7 +23,7 @@ szAxi <- 4.5 # size of axis titles
 szTxt <- 4 # size of axis text
 
 # output figure name, adjust as needed
-outFigSt <- 'S61_'
+outFigSzn <- 'S61_'
 outFigWeek <- 'Week_4_'
 outFigEnd <- '.jpg'
 
@@ -54,29 +53,31 @@ dfBase$Previous <- case_when(
   dfBase$Increase >= 50 ~ '#009900',
   TRUE ~ '#000000')
 
-dfQB <- subset(dfBase, Pos == 'QB') # Separate out Quarterbacks
-dfRB <- subset(dfBase, Pos == 'RB') # Separate out Running Backs
+dfSort <- arrange(dfBase, Rank) # Sorts the dataframe by rank to ensure proper order when graphing
+
+dfQB <- subset(dfSort, Pos == 'QB' & Rank < 11) # Separate out Quarterbacks
+dfRB <- subset(dfSort, Pos == 'RB' & Rank < 21) # Separate out Running Backs
 dfRBOne <- subset(dfRB, Rank < 11) # Limit to top 10 RBs
 dfRBTwo <- subset(dfRB, Rank > 10) # Limit to 11-20 RBs
 dfRBTwo$Rank <- dfRBTwo$Rank - 10 # Adjust rank on 11-20 RBs for graphing purposes
-dfWR <- subset(dfBase, Pos == 'WR' | Pos == 'TE') # Separate out Wide Receivers & Tight Ends
+dfWR <- subset(dfSort, (Pos == 'WR' | Pos == 'TE') & Rank < 31) # Separate out Wide Receivers & Tight Ends
 dfWROne <- subset(dfWR, Rank < 11) # Limit to top 10 WR/TEs
 dfWRTwo <- subset(dfWR, Rank > 10 & Rank < 21) # Limit to 11-20 WR/TEs
 dfWRThree <- subset(dfWR, Rank > 20) # Limit to 21-30 WR/TEs
 dfWRTwo$Rank <- dfWRTwo$Rank - 10 # Adjust rank on 11-20 WR/TEs for graphing purposes
 dfWRThree$Rank <- dfWRThree$Rank - 20 # Adjust rank on 21-30 WR/TEs for graphing purposes
-dfOL <- subset(dfBase, Pos == 'OL') # Separate out Offensive Line
-dfK <- subset(dfBase, Pos == 'K') # Separate out Kickers
-dfDL <- subset(dfBase, Pos == 'DT' | Pos == 'DE') # Separate out Defensive Line
-dfLB <- subset(dfBase, Pos == 'LB') # Separate out Linebackers
-dfDB <- subset(dfBase, Pos == 'CB' | Pos == 'S') # Separate out Defensive Backs
+dfOL <- subset(dfSort, Pos == 'OL' & Rank < 11) # Separate out Offensive Line
+dfK <- subset(dfSort, Pos == 'K' & Rank < 11) # Separate out Kickers
+dfDL <- subset(dfSort, (Pos == 'DT' | Pos == 'DE') & Rank < 11) # Separate out Defensive Line
+dfLB <- subset(dfSort, Pos == 'LB') # Separate out Linebackers
+dfDB <- subset(dfSort, (Pos == 'CB' | Pos == 'S') & Rank < 11) # Separate out Defensive Backs
 
 for (i in 1:11) { # QB, OL, K, DL, LB, DB, RB1, RB2, WR1-3
   dfPlot <- switch(i, dfQB, dfOL, dfK, dfDL, dfLB, dfDB, 
                       dfRBOne, dfRBTwo, dfWROne, dfWRTwo, dfWRThree) # determine which position group to use
   outFigPos <- switch(i, 'QB','OL', 'K', 'DL', 'LB', 'DB', 
                          'RB1', 'RB2', 'WR1', 'WR2', 'WR3') # adds position type to output file name
-  outFig <- paste0(outFigSt, outFigWeek, outFigPos, outFigEnd) # output file name
+  outFig <- paste0(outFigSzn, outFigWeek, outFigPos, outFigEnd) # output file name
   outPath <- paste0(plotDir, outFig) # file path
   posTitle <- switch(i, 'Quarterbacks',' Offensive Line', 'Kickers',
                      'Defensive Line', 'Linebackers', 'Defensive Backs',
